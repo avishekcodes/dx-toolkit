@@ -147,6 +147,8 @@ public class DXRecord extends DXDataObject {
      * <pre>
      * DXRecord r = DXRecord.newRecord().inProject(&quot;proj-0000&quot;).setName(&quot;foo&quot;).build();
      * </pre>
+     *
+     * @return a newly initialized builder object
      */
     public static Builder newRecord() {
         return new Builder();
@@ -162,6 +164,10 @@ public class DXRecord extends DXDataObject {
      * <pre>
      * DXRecord r = DXRecord.newRecordWithEnvironment(DXEnvironment.create()).inProject(&quot;proj-0000&quot;).setName(&quot;foo&quot;).build();
      * </pre>
+     *
+     * @param env environment to use to make API calls
+     *
+     * @return a newly initialized builder object
      */
     public static Builder newRecordWithEnvironment(DXEnvironment env) {
         return new Builder(env);

@@ -44,6 +44,8 @@ public final class DXJob extends DXObject {
 
         /**
          * Returns the date at which the job was created.
+         *
+         * @return
          */
         public Date getCreationDate() {
             return new Date(describeOutput.created);
@@ -51,6 +53,8 @@ public final class DXJob extends DXObject {
 
         /**
          * Returns the ID of the job.
+         *
+         * @return
          */
         public String getId() {
             return describeOutput.id;
@@ -58,6 +62,8 @@ public final class DXJob extends DXObject {
 
         /**
          * Returns the date at which the job was last modified.
+         *
+         * @return
          */
         public Date getModifiedDate() {
             return new Date(describeOutput.modified);
@@ -65,6 +71,8 @@ public final class DXJob extends DXObject {
 
         /**
          * Returns the name of the job.
+         *
+         * @return
          */
         public String getName() {
             return describeOutput.name;
@@ -72,6 +80,8 @@ public final class DXJob extends DXObject {
 
         /**
          * Returns the job's parent job, or {@code null} if the job is an origin job.
+         *
+         * @return
          */
         public DXJob getParentJob() {
             if (describeOutput.parentJob == null) {
@@ -82,6 +92,8 @@ public final class DXJob extends DXObject {
 
         /**
          * Returns the state of the job.
+         *
+         * @return
          */
         public JobState getState() {
             return describeOutput.state;
