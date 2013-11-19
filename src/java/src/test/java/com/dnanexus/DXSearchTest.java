@@ -19,24 +19,68 @@ package com.dnanexus;
 import java.io.IOException;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Set;
 import java.util.TimeZone;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class DXSearchTest {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private DXProject testProject;
+
+    @Before
+    public void setUp() {
+        testProject = DXProject.newProject().setName("DXRecordTest").build();
+    }
+
+    @After
+    public void tearDown() {
+        if (testProject != null) {
+            testProject.destroy();
+        }
+    }
+
     // External tests
 
     @Test
     public void testFindDataObjects() {
-        @SuppressWarnings("unused")
-        List<DXDataObject> results =
-                DXSearch.findDataObjects().nameMatchesExactly("foobarbaz").execute().asList();
+        Assert.assertEquals(0, DXSearch.findDataObjects().nameMatchesExactly("foobarbaz").execute()
+                .asList().size());
+
+        // Test paging through results
+        List<DXRecord> records = Lists.newArrayList();
+        Set<String> recordIds = Sets.newHashSet();
+        for (int i = 0; i < 8; ++i) {
+            DXRecord record =
+                    DXRecord.newRecord().setProject(testProject)
+                            .setName("foo" + Integer.toString(i)).build();
+            records.add(record);
+            recordIds.add(record.getId());
+        }
+        List<DXRecord> outputRecords =
+                DXSearch.findDataObjects().inProject(testProject).nameMatchesGlob("foo*")
+                        .ofClassRecord().execute().asList();
+        Assert.assertEquals(8, outputRecords.size());
+
+        List<DXRecord> outputRecordsWithPaging =
+                DXSearch.findDataObjects().inProject(testProject).nameMatchesGlob("foo*")
+                        .ofClassRecord().execute(3).asList();
+        Assert.assertEquals(outputRecords, outputRecordsWithPaging);
+        Set<String> outputRecordIds = Sets.newHashSet();
+        for (DXRecord record : outputRecordsWithPaging) {
+            outputRecordIds.add(record.getId());
+        }
+
+        Assert.assertEquals(recordIds, outputRecordIds);
     }
 
     @Test
@@ -111,21 +155,15 @@ public class DXSearchTest {
 
     @Test
     public void testFindDataObjectsResponseSerialization() throws IOException {
-        // First test deserialization of the result without making a real API
-        // call
-        DXSearch.FindDataObjectsResponse findDataObjectsResponse =
-                new DXSearch.FindDataObjectsResponse(
-                        DXJSON.safeTreeToValue(
-                                DXJSON.parseJson("{\"results\":[{\"id\": \"record-000000000000000000000000\", \"project\": \"project-123412341234123412341234\"}]}"),
-                                DXSearch.FindDataObjectsResponseHash.class), DXEnvironment.create());
-        List<DXDataObject> results = findDataObjectsResponse.asList();
-        Assert.assertEquals(1, results.size());
-        Assert.assertEquals("record-000000000000000000000000", results.get(0).getId());
+        // Test deserialization of the result without making a real API call
+        DXJSON.safeTreeToValue(
+                DXJSON.parseJson("{\"results\":[{\"id\": \"record-000000000000000000000000\", \"project\": \"project-123412341234123412341234\"}]}"),
+                DXSearch.FindDataObjectsResponse.class);
 
         // Extra fields in the response should not cause us to choke (for API
         // forward compatibility)
         DXJSON.safeTreeToValue(DXJSON.parseJson("{\"notAField\": true, \"results\":[]}"),
-                DXSearch.FindDataObjectsResponseHash.class);
+                DXSearch.FindDataObjectsResponse.class);
     }
 
     @Test
@@ -176,20 +214,15 @@ public class DXSearchTest {
 
     @Test
     public void testFindJobsResponseSerialization() throws IOException {
-        // First test deserialization of the result without making a real API
-        // call
-        DXSearch.FindJobsResponse findJobsResponse =
-                new DXSearch.FindJobsResponse(DXJSON.safeTreeToValue(DXJSON
-                        .parseJson("{\"results\":[{\"id\": \"job-000000000000000000000000\"}]}"),
-                        DXSearch.FindJobsResponseHash.class), DXEnvironment.create());
-        List<DXJob> results = findJobsResponse.asList();
-        Assert.assertEquals(1, results.size());
-        Assert.assertEquals("job-000000000000000000000000", results.get(0).getId());
+        // Test deserialization of the result without making a real API call
+        DXJSON.safeTreeToValue(
+                DXJSON.parseJson("{\"results\":[{\"id\": \"job-000000000000000000000000\"}]}"),
+                DXSearch.FindJobsResponse.class);
 
         // Extra fields in the response should not cause us to choke (for API
         // forward compatibility)
         DXJSON.safeTreeToValue(DXJSON.parseJson("{\"notAField\": true, \"results\":[]}"),
-                DXSearch.FindJobsResponseHash.class);
+                DXSearch.FindJobsResponse.class);
     }
 
 }
